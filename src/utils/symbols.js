@@ -9,8 +9,8 @@ export const symbols = [
 
 export const paytable = {
     "Slot1": {multiplier : 100,message:"Won x100"},
-    "Slot2": {multiplier : 100,message:"Won x50"},
-    "Slot3": {multiplier : 100,message:"Won x25"},
-    "Slot4": {multiplier : 100,message:"Won x20"},
-    "Slot5": {multiplier : 100,message:"Won x10"},
+    "Slot2": {multiplier : 50,message:"Won x50"},
+    "Slot3": {multiplier : 25,message:"Won x25"},
+    "Slot4": {multiplier : 20,message:"Won x20"},
+    "Slot5": {multiplier : 10,message:"Won x10"},
 };
