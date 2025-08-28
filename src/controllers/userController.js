@@ -9,13 +9,17 @@ export const createUser = async (req, res) => {
 
     // Check for missing fields
     if (!username || !email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
     }
 
     // Check for existing user
     const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "Username or email already exists" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Username or email already exists" });
     }
 
     // Hash the password
@@ -34,11 +38,16 @@ export const createUser = async (req, res) => {
     };
 
     // Send a consistent success response
-    res.status(201).json({ success: true, message: "User registered successfully", user: userWithoutPassword });
-
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: userWithoutPassword,
+    });
   } catch (err) {
     // Send a consistent error response for server errors
-    res.status(500).json({ success: false, message: "Server error", error: err.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
   }
 };
 
@@ -49,16 +58,22 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ username });
 
     if (username === "" || password === "") {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
     }
 
     if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ success: false, message: "Invalid password" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid password" });
     }
 
     // Generate JWT token
@@ -66,7 +81,7 @@ export const loginUser = async (req, res) => {
       { id: user._id, username: user.username },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1h",
+        expiresIn: "1d",
       }
     );
 
