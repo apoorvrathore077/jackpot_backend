@@ -40,7 +40,7 @@ export const loginUser = async (req, res) => {
     if (!user) {
       return res.status(400).json({ error: "User not found" });
     }
-    if (user.hashedPassword !== password) {
+    if (user.password !== password) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
