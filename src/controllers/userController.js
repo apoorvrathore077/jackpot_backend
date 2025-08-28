@@ -1,5 +1,6 @@
 import User from "../model/user.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 // ✅ Add user
 export const createUser = async (req, res) => {
@@ -15,7 +16,9 @@ export const createUser = async (req, res) => {
       return res
         .status(400)
         .json({ error: "Username or email already exists" });
-    const newUser = new User({ username, email, password });
+    // Hash password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ username, email, hashedPassword });
     await newUser.save();
 
     res.status(201).json({ message: "User registered", user: newUser });
@@ -42,9 +45,13 @@ export const loginUser = async (req, res) => {
     }
 
     // Generate JWT token with user ID
-    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
     res.json({
       message: "Login successful",
       token,
