@@ -7,62 +7,98 @@ export const createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    // Check for missing fields
     if (!username || !email || !password) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-
-    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-    if (existingUser)
       return res
         .status(400)
-        .json({ error: "Username or email already exists" });
-    // Hash password before saving
+        .json({ success: false, message: "All fields are required" });
+    }
+
+    // Check for existing user
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Username or email already exists" });
+    }
+
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, email, hashedPassword });
+
+    // Create a new user instance
+    const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
 
-    res.status(201).json({ message: "User registered", user: newUser });
+    // Create a user object to send back, without the password
+    const userWithoutPassword = {
+      id: newUser._id,
+      username: newUser.username,
+      email: newUser.email,
+      // You can add other user fields here, but not the password
+    };
+
+    // Send a consistent success response
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: userWithoutPassword,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    // Send a consistent error response for server errors
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
   }
 };
 
-// login
-
-// In userController.js
+// login user
 export const loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
+
     if (username === "" || password === "") {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-    if (!user) {
-      return res.status(400).json({ error: "User not found" });
-    }
-    if (user.password !== password) {
-      return res.status(401).json({ error: "Invalid password" });
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
     }
 
-    // Generate JWT token with user ID
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid password" });
+    }
+
+    // Generate JWT token
     const token = jwt.sign(
       { id: user._id, username: user.username },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1h",
+        expiresIn: "1d",
       }
     );
+
+    // Return a consistent success response
     res.json({
+      success: true, // Corrected: Added a 'success' flag
       message: "Login successful",
       token,
       user: {
         id: user._id,
         username: user.username,
+        email: user.email,
         balance: user.balance,
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 

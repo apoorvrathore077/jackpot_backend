@@ -1,9 +1,9 @@
 import Game from "../model/game.js";
 import User from "../model/user.js";
-import { symbols,paytable } from "../utils/symbols.js";
+import { symbols, paytable } from "../utils/symbols.js";
 
 export const createGame = async (req, res) => {
-    console.log("req.user:", req.user);
+  console.log("req.user:", req.user);
 
   const userId = req.user.id;
   const { bet } = req.body;
@@ -21,9 +21,11 @@ export const createGame = async (req, res) => {
 
     const game = await Game.create({ player: userId, bet });
 
-    res.json({ message: "Game started", 
+    res.json({
+      message: "Game started",
       gameId: game._id,
-    balance: user.balance});
+      balance: user.balance,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -85,7 +87,6 @@ export const spinGame = async (req, res) => {
   }
 };
 
-
 // Get Game status
 export const getGame = async (req, res) => {
   const { gameId } = req.params;
@@ -100,5 +101,3 @@ export const getGame = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-

@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 
 const jwtSecret = process.env.JWT_SECRET || "your_jwt_secret";
-const jwtExpiry = "1h"; // Token expiry time
 export const auth = (req, res, next) => {
   const header = req.headers.authorization || "";
   const [type, token] = header.split(" ");
