@@ -1,6 +1,6 @@
 import Game from "../model/game.js";
 import User from "../model/user.js";
-import { symbols, paytable } from "../utils/symbols.js";
+import { symbols, paytable, pickWeightedSymbol } from "../utils/symbols.js";
 
 // CREATE GAME
 export const createGame = async (req, res) => {
@@ -58,18 +58,20 @@ export const spinGame = async (req, res) => {
     // Deduct bet from balance
     game.currentBalance -= game.bet;
 
-    // Spin 3 wheels
+    // Spin 3 wheels using weighted probabilities
     const spinResult = Array.from({ length: 3 }, () => {
-      const index = Math.floor(Math.random() * symbols.length);
-      return { name: symbols[index].name, image: symbols[index].image };
+      const symbol = pickWeightedSymbol();
+      return { name: symbol.name, image: symbol.image };
     });
 
     const isWinner = spinResult.every(s => s.name === spinResult[0].name);
 
     let winnings = 0;
+    let multiplier = 0;
     if (isWinner) {
       const firstSymbol = spinResult[0].name;
-      winnings = game.bet * paytable[firstSymbol].multiplier;
+      multiplier = paytable[firstSymbol].multiplier;
+      winnings = game.bet * multiplier;
       game.currentBalance += winnings; // Add winnings to balance
       game.winnings += winnings; // Track total winnings
       game.result = "win";
@@ -94,6 +96,8 @@ export const spinGame = async (req, res) => {
       gameId,
       symbols: spinResult,
       result: game.result,
+      bet: game.bet,
+      multiplier,
       winnings,
       currentBalance: game.currentBalance,
       canContinue,
@@ -112,6 +116,10 @@ export const getGame = async (req, res) => {
   const { gameId } = req.params;
 
   try {
+    // Validate ObjectId early to avoid CastError
+    if (!/^[a-fA-F0-9]{24}$/.test(gameId)) {
+      return res.status(400).json({ error: "Invalid gameId" });
+    }
     const game = await Game.findById(gameId).populate(
       "player",
       "username email balance"
