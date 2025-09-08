@@ -4,15 +4,14 @@ import {
   getUsers,
   loginUser,
 } from "../controllers/userController.js";
-import auth from "../middleware/auth.js";
 import User from "../model/user.js";
 
 const router = Router();
 router.post("/register", createUser); // Correct
-router.get("/", auth, getUsers); // Correct
+router.get("/",  getUsers); // Correct
 router.post("/login", loginUser); // Remove 'auth' middleware here
 // fetch user profile
-router.get("/profile", auth, async (req, res) => {
+router.get("/profile", async (req, res) => {
   try {
     const user = await User.findOne({ username: req.user.username });
     if (!user) {
